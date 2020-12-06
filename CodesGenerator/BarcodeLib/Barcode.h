@@ -5,5 +5,5 @@
 
 namespace Barcode 
 {
-	std::vector<unsigned char> GenerateUPC(std::string input);
+	std::vector<bool> GenerateUPC(std::string input);
 }
