@@ -1,2 +1,2 @@
 # qrcode-barcode-generator
-Project contains library with QR codes and barcodes generator and WinAPI application
+This is course project for 5 sem
