@@ -2,28 +2,9 @@
 #include "framework.h"
 #include <unordered_map>
 #include "Barcode.h"
+#include "BarcodeConstants.h"
 
 using namespace std;
-
-const unsigned char BORDER_BYTE = 0b00000101;
-const unsigned char MIDDLE_BYTE = 0b00001010;
-const int STRING_MIDDLE_INDEX = 6;
-const int LEFT_CODE = 0;
-const int RIGHT_CODE = 1;
-
-const unordered_map<char, vector<unsigned char>> UPC_CODES_TABLE
-{
-	{'0', {0b00001101, 0b01110010} },
-	{'1', {0b00011001, 0b01100110} },
-	{'2', {0b00010011, 0b01101100} },
-	{'3', {0b00111101, 0b01000010} },
-	{'4', {0b00100011, 0b01011100} },
-	{'5', {0b00110001, 0b01001110} },
-	{'6', {0b00101111, 0b01010000} },
-	{'7', {0b00111011, 0b01000100} },
-	{'8', {0b00110111, 0b01001000} },
-	{'9', {0b00001011, 0b01110100} }
-};
 
 int CharToInt(char c);
 char IntToChar(int i);
@@ -48,16 +29,56 @@ namespace Barcode
 
 		for (int i = 0; i < input.size(); i++)
 		{
-			if (i == STRING_MIDDLE_INDEX)
+			if (i == UPC_STRING_MIDDLE_INDEX)
 			{
 				PushMiddleGuard(barcode);
 			}
 
-			int codeType = i < STRING_MIDDLE_INDEX ? LEFT_CODE : RIGHT_CODE;
-			PushByte(UPC_CODES_TABLE.at(input[i])[codeType], barcode);
+			char digit = input[i];
+			int codeType = i < UPC_STRING_MIDDLE_INDEX ? L_CODE : R_CODE;
+
+			PushByte(UPC_CODES_TABLE.at(digit)[codeType], barcode);
 		}
 
-		PushByte(UPC_CODES_TABLE.at(GetControlNumber(input))[RIGHT_CODE], barcode);
+		PushByte(UPC_CODES_TABLE.at(GetControlNumber(input))[R_CODE], barcode);
+		PushBorderGuard(barcode);
+
+		return barcode;
+	}
+
+	vector<bool> GenerateEAN13(string input) 
+	{
+		if (input.size() != 12) 
+		{
+			vector<bool> empty;
+
+			return empty;
+		}
+
+		vector<bool> barcode;
+		PushBorderGuard(barcode);
+
+		char firstDigit = input[0];
+
+		for (int i = 1; i < input.size(); i++) 
+		{
+			if (i == EAN13_STRING_MIDDLE_INDEX) 
+			{
+				PushMiddleGuard(barcode);
+			}
+
+			int codeType = R_CODE;
+			char digit = input[i];
+
+			if (i < EAN13_STRING_MIDDLE_INDEX) 
+			{
+				codeType = EAN13_FIRST_DIGIT_PATTERNS.at(firstDigit)[i - 1];
+			}
+
+			PushByte(EAN13_CODES_TABLE.at(digit)[codeType], barcode);
+		}
+
+		PushByte(EAN13_CODES_TABLE.at(GetControlNumber(input))[R_CODE], barcode);
 		PushBorderGuard(barcode);
 
 		return barcode;
@@ -80,7 +101,13 @@ char GetControlNumber(string input)
 
 	for (int i = 0; i < input.size(); i++)
 	{
-		int coeff = i % 2 == 0 ? 3 : 1;
+		int coeff = 1;
+
+		switch (input.size())
+		{
+			case 11: coeff = i % 2 == 0 ? 3 : 1; break;
+			case 12: coeff = i % 2 == 0 ? 1 : 3; break;
+		}
 
 		sum += CharToInt(input[i]) * coeff;
 	}
