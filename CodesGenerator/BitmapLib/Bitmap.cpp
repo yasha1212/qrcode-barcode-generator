@@ -11,12 +11,12 @@ unsigned char* CreateBitmapInfoHeader(int height, int width);
 
 namespace Bitmap 
 {
-    void WriteBarcodeToFile(vector<bool> barcode, string path) 
+    void WriteBarcodeToFile(vector<bool> barcode, int scale, string path) 
     {
         ofstream file(path, ios::binary);
 
-        int width = BARCODE_WIDTH * IMAGE_SCALE;
-        int height = BARCODE_HEIGHT * IMAGE_SCALE;
+        int width = BARCODE_WIDTH * scale;
+        int height = BARCODE_HEIGHT * scale;
 
         int widthInBytes = width * BMP_PIXEL_SIZE;
 
@@ -35,7 +35,7 @@ namespace Bitmap
         {
             for (int j = 0; j < BARCODE_WIDTH; j++) 
             {
-                for (int k = 0; k < IMAGE_SCALE; k++)
+                for (int k = 0; k < scale; k++)
                 {
                     if (barcode[j] == 0)
                     {
