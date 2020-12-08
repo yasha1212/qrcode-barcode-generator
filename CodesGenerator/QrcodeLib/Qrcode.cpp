@@ -6,10 +6,11 @@
 using namespace std;
 
 int ApplyMask(int x, int y);
-vector<bool> EncodeString(string input);
 int GetVersion(int bitsAmount);
-vector<bool> AddServiceFields(vector<bool> data, int version, int charAmount);
 bool IsValidInput(string input);
+vector<bool> EncodeString(string input);
+void AddServiceFields(vector<bool>& data, int version, int charAmount);
+void FillSequence(vector<bool>& data, int version);
 
 namespace Qrcode 
 {
@@ -21,7 +22,6 @@ namespace Qrcode
         }
 
         vector<bool> data = EncodeString(input);
-
         int version = GetVersion(data.size());
 
         if (version == 0) 
@@ -29,7 +29,8 @@ namespace Qrcode
             return 1;
         }
 
-        data = AddServiceFields(data, version, input.length());
+        AddServiceFields(data, version, input.length());
+        FillSequence(data, version);
 
         return 0;
     }
@@ -114,7 +115,7 @@ int GetVersion(int bitsAmount)
     return version;
 }
 
-vector<bool> AddServiceFields(vector<bool> data, int version, int charAmount) 
+void AddServiceFields(vector<bool>& data, int version, int charAmount) 
 {
     vector<bool> result;
 
@@ -134,5 +135,37 @@ vector<bool> AddServiceFields(vector<bool> data, int version, int charAmount)
         result.push_back(bit);
     }
 
-    return result;
+    data.clear();
+
+    for (auto bit : result) 
+    {
+        data.push_back(bit);
+    }
+}
+
+void FillSequence(vector<bool>& data, int version) 
+{
+    const vector<bool> PADDING_BYTE_1 {1,1,1,0,1,1,0,0};
+    const vector<bool> PADDING_BYTE_2 {0,0,0,1,0,0,0,1};
+
+    int paddingBitsAmount = 8 - (data.size() % 8);
+
+    for (int i = 0; i < paddingBitsAmount; i++) 
+    {
+        data.push_back(0);
+    }
+
+    bool iterator = false;
+
+    while (data.size() != VERSION_PARAMETERS.at(version)[MAX_BITS]) 
+    {
+        vector<bool> paddingByte = iterator == false ? PADDING_BYTE_1 : PADDING_BYTE_2;
+
+        for (auto bit : paddingByte) 
+        {
+            data.push_back(bit);
+        }
+
+        iterator = !iterator;
+    }
 }
