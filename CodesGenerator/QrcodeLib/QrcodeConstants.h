@@ -53,29 +53,35 @@ const std::unordered_map<char, int> CHARACTERS_CODES // Character, Code
 const int MAX_BITS = 0;
 const int BLOCKS_AMOUNT = 1;
 const int CORRECTION_BYTES_AMOUNT = 2;
+const int DATA_FIELD_LENGTH = 3;
 
-const std::unordered_map<int, std::vector<int>> VERSION_PARAMETERS // Version, {Maximum amount of bits, Blocks amount, Correction bytes amount}
+const std::unordered_map<int, std::vector<int>> VERSION_PARAMETERS // Version, {Maximum amount of bits, Blocks amount, Correction bytes amount, Data amount field length}
 {
-    {1, {128, 1, 10} },
-    {2, {224, 1, 16} },
-    {3, {352, 1, 26} },
-    {4, {512, 2, 18} },
-    {5, {688, 2, 24} },
-    {6, {864, 4, 16} },
-    {7, {992, 4, 18} },
-    {8, {1232, 4, 22} },
-    {9, {1456, 5, 22} },
-    {10, {1728, 5, 26} },
-    {11, {2032, 5, 30} },
-    {12, {2320, 8, 22} },
-    {13, {2672, 9, 22} },
-    {14, {2920, 9, 24} },
-    {15, {3320, 10, 24} },
-    {16, {3624, 10, 28} },
-    {17, {4056, 11, 28} },
-    {18, {4504, 13, 26} },
-    {19, {5016, 14, 26} },
-    {20, {5352, 16, 26} },
+    {1, {128, 1, 10, 9} },
+    {2, {224, 1, 16, 9} },
+    {3, {352, 1, 26, 9} },
+    {4, {512, 2, 18, 9} },
+    {5, {688, 2, 24, 9} },
+    {6, {864, 4, 16, 9} },
+    {7, {992, 4, 18, 9} },
+    {8, {1232, 4, 22, 9} },
+    {9, {1456, 5, 22, 9} },
+    {10, {1728, 5, 26, 11} },
+    {11, {2032, 5, 30, 11} },
+    {12, {2320, 8, 22, 11} },
+    {13, {2672, 9, 22, 11} },
+    {14, {2920, 9, 24, 11} },
+    {15, {3320, 10, 24, 11} },
+    {16, {3624, 10, 28, 11} },
+    {17, {4056, 11, 28, 11} },
+    {18, {4504, 13, 26, 11} },
+    {19, {5016, 14, 26, 11} },
+    {20, {5352, 16, 26, 11} },
+};
+
+const std::vector<bool> CODING_TYPE_FIELD
+{
+    0,0,1,0
 };
 
 const std::unordered_map<int, std::vector<int>> POLYNOMIALS // Correction bytes amount, Generating polynomial
