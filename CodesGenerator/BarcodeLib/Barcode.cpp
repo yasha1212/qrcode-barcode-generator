@@ -15,16 +15,15 @@ void PushMiddleGuard(vector<bool>& barcode);
 
 namespace Barcode 
 {
-	vector<bool> GenerateUPC(string input) 
+	int GenerateUPC(string input, vector<bool>& barcode)
 	{
 		if (input.size() != 11)
 		{
-			vector<bool> empty;
-
-			return empty;
+			return 1;
 		}
 
-		vector<bool> barcode;
+		barcode.clear();
+
 		PushBorderGuard(barcode);
 
 		for (int i = 0; i < input.size(); i++)
@@ -43,19 +42,18 @@ namespace Barcode
 		PushByte(UPC_CODES_TABLE.at(GetControlNumber(input))[R_CODE], barcode);
 		PushBorderGuard(barcode);
 
-		return barcode;
+		return 0;
 	}
 
-	vector<bool> GenerateEAN13(string input) 
+	int GenerateEAN13(string input, vector<bool>& barcode)
 	{
 		if (input.size() != 12) 
 		{
-			vector<bool> empty;
-
-			return empty;
+			return 1;
 		}
 
-		vector<bool> barcode;
+		barcode.clear();
+
 		PushBorderGuard(barcode);
 
 		char firstDigit = input[0];
@@ -81,7 +79,7 @@ namespace Barcode
 		PushByte(EAN13_CODES_TABLE.at(GetControlNumber(input))[R_CODE], barcode);
 		PushBorderGuard(barcode);
 
-		return barcode;
+		return 0;
 	}
 }
 
