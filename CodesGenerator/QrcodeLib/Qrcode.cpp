@@ -9,26 +9,46 @@ int ApplyMask(int x, int y);
 vector<bool> EncodeString(string input);
 int GetVersion(int bitsAmount);
 vector<bool> AddServiceFields(vector<bool> data, int version, int charAmount);
+bool IsValidInput(string input);
 
 namespace Qrcode 
 {
-    QrCode Generate(string input) 
+    int Generate(string input, QrCode& qrcode) 
     {
+        if (!IsValidInput(input)) 
+        {
+            return 2;
+        }
+
         vector<bool> data = EncodeString(input);
 
         int version = GetVersion(data.size());
 
         if (version == 0) 
         {
-            QrCode empty;
-            return empty;
+            return 1;
         }
 
         data = AddServiceFields(data, version, input.length());
 
-        QrCode empty;
-        return empty;
+        return 0;
     }
+}
+
+bool IsValidInput(string input) 
+{
+    bool result = true;
+
+    for (auto ch : input) 
+    {
+        if (CHARACTERS_CODES.find(ch) == CHARACTERS_CODES.end()) 
+        {
+            result = false;
+            break;
+        }
+    }
+
+    return result;
 }
 
 int ApplyMask(int x, int y) 

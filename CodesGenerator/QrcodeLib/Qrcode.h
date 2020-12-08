@@ -8,5 +8,5 @@ namespace Qrcode
 
     };
 
-    QrCode Generate(std::string input); // Alphanumeric Coding with M correction level is used (1..20 versions)
+    int Generate(std::string input, Qrcode::QrCode& qrcode); // Alphanumeric Coding with M correction level is used (1..20 versions)
 }
