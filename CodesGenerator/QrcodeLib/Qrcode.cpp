@@ -19,6 +19,9 @@ void FillSequence(Bits& data, int version);
 Bytes BitsToBytes(Bits data);
 BlocksOfBytes GetDataBlocks(Bits data, int version);
 BlocksOfBytes GetCorrectionBlocks(BlocksOfBytes blocks, int version);
+Bytes PrepareArray(Bytes block, int correctionBytesAmount);
+unsigned char GetFirstByte(Bytes& bytes);
+Bytes Copy(Bytes source, int amount);
 
 namespace Qrcode 
 {
@@ -42,6 +45,7 @@ namespace Qrcode
 
         BlocksOfBytes dataBlocks = GetDataBlocks(data, version);
         BlocksOfBytes correctionBlocks = GetCorrectionBlocks(dataBlocks, version);
+
         return 0;
     }
 }
@@ -231,5 +235,77 @@ BlocksOfBytes GetDataBlocks(Bits data, int version)
 
 BlocksOfBytes GetCorrectionBlocks(BlocksOfBytes blocks, int version)
 {
+    int correctionBytesAmount = VERSION_PARAMETERS.at(version)[CORRECTION_BYTES_AMOUNT];
+    Bytes polynomial = POLYNOMIALS.at(correctionBytesAmount);
 
+    BlocksOfBytes correctionBytesBlocks;
+
+    for (auto block : blocks) 
+    {
+        Bytes temp = PrepareArray(block, correctionBytesAmount);
+
+        for (int i = 0; i < block.size(); i++) 
+        {
+            unsigned char A = GetFirstByte(temp);
+            
+            if (A == 0) 
+            {
+                continue;
+            }
+
+            unsigned char B = GALOIS_TABLE.at(A)[REVERSE];
+
+            for (int j = 0; j < correctionBytesAmount; j++) 
+            {
+                unsigned char C = (polynomial[j] + B) % 255;
+
+                temp[j] ^= GALOIS_TABLE.at(C)[DEFAULT];
+            }
+        }
+
+        Bytes correctionBlock = Copy(temp, correctionBytesAmount);
+
+        correctionBytesBlocks.push_back(correctionBlock);
+    }
+
+    return correctionBytesBlocks;
+}
+
+Bytes PrepareArray(Bytes block, int correctionBytesAmount) 
+{
+    Bytes result;
+
+    for (auto byte : block) 
+    {
+        result.push_back(byte);
+    }
+
+    while (result.size() < correctionBytesAmount) 
+    {
+        result.push_back(0);
+    }
+
+    return result;
+}
+
+unsigned char GetFirstByte(Bytes& bytes) 
+{
+    unsigned char firstByte = bytes[0];
+
+    bytes.erase(bytes.begin());
+    bytes.push_back(0);
+
+    return firstByte;
+}
+
+Bytes Copy(Bytes source, int amount) 
+{
+    Bytes result;
+
+    for (int i = 0; i < amount; i++) 
+    {
+        result.push_back(source[i]);
+    }
+
+    return result;
 }

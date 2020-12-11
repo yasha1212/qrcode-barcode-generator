@@ -84,7 +84,7 @@ const std::vector<bool> CODING_TYPE_FIELD
     0,0,1,0
 };
 
-const std::unordered_map<int, std::vector<int>> POLYNOMIALS // Correction bytes amount, Generating polynomial
+const std::unordered_map<int, std::vector<unsigned char>> POLYNOMIALS // Correction bytes amount, Generating polynomial
 {
     {7, {87, 229, 146, 149, 238, 102, 21} },
     {10, {251, 67, 46, 61, 118, 70, 64, 94, 32, 45} },
