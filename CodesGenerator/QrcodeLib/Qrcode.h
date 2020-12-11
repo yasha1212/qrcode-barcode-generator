@@ -3,10 +3,13 @@
 
 namespace Qrcode 
 {
-    struct QrCode
+    struct Module
     {
-
+        bool value;
+        bool isFree;
     };
 
-    int Generate(std::string input, Qrcode::QrCode& qrcode); // Alphanumeric Coding with M correction level is used (1..20 versions)
+    typedef std::vector<std::vector<Module>> QrCode;
+
+    int Generate(std::string input, QrCode& qrcode); // Alphanumeric Coding with M correction level is used (1..20 versions)
 }

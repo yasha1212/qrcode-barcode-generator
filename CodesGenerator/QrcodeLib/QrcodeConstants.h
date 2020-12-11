@@ -1,6 +1,8 @@
 #pragma once
 #include <unordered_map>
 
+const int BORDER_PADDING = 4;
+
 const std::unordered_map<char, int> CHARACTERS_CODES // Character, Code
 {
     {'0', 0},
@@ -364,9 +366,8 @@ const std::unordered_map<int, std::vector<int>> GALOIS_TABLE // Number, {Default
     { 255, {1, 175} }
 };
 
-const std::unordered_map<int, std::vector<int>> ALLIGNMENT_PATTERNS // Version, Coordinate number
+const std::unordered_map<int, std::vector<int>> ALIGNMENT_PATTERNS // Version, Coordinate number
 {
-    {1, {} },
     {2, {18} },
     {3, {22} },
     {4, {26} },

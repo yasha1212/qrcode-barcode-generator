@@ -23,6 +23,14 @@ Bytes PrepareArray(Bytes block, int correctionBytesAmount);
 unsigned char GetFirstByte(Bytes& bytes);
 Bytes Copy(Bytes source, int amount);
 Bytes UniteBlocks(BlocksOfBytes data, BlocksOfBytes correction);
+Qrcode::QrCode BuildQrcode(Bytes data, int version);
+Qrcode::QrCode Initialize(int version);
+void AddSearchElements(Qrcode::QrCode& matrix);
+void AddAlignmentPatterns(Qrcode::QrCode& matrix, int version);
+void AddSynchronizationLines(Qrcode::QrCode& matrix);
+void AddVersionCode(Qrcode::QrCode& matrix, int version);
+void AddMaskCode(Qrcode::QrCode& matrix);
+vector<vector<int>> GetCoordinates(vector<int> nodes);
 
 namespace Qrcode 
 {
@@ -48,6 +56,10 @@ namespace Qrcode
         BlocksOfBytes correctionBlocks = GetCorrectionBlocks(dataBlocks, version);
 
         Bytes sequence = UniteBlocks(dataBlocks, correctionBlocks);
+
+        qrcode.clear();
+
+        qrcode = BuildQrcode(sequence, version);
 
         return 0;
     }
@@ -342,4 +354,280 @@ Bytes UniteBlocks(BlocksOfBytes data, BlocksOfBytes correction)
     }
 
     return result;
+}
+
+Qrcode::QrCode BuildQrcode(Bytes data, int version) 
+{
+    Qrcode::QrCode matrix = Initialize(version);
+    AddSearchElements(matrix);
+
+    if (version > 1) 
+    {
+        AddAlignmentPatterns(matrix, version);
+    }
+
+    AddSynchronizationLines(matrix);
+
+    if (version > 6) 
+    {
+        AddVersionCode(matrix, version);
+    }
+
+    AddMaskCode(matrix);
+
+    return matrix;
+}
+
+Qrcode::QrCode Initialize(int version) 
+{
+    int valueSize;
+
+    if (version == 1) 
+    {
+        valueSize = 21;
+    }
+    else 
+    {
+        vector<int> nodesCoords = ALIGNMENT_PATTERNS.at(version);
+        valueSize = nodesCoords[nodesCoords.size() - 1] + 7;
+    }
+
+    int realSize = valueSize + 8;
+
+    Qrcode::QrCode result;
+
+    for (int i = 0; i < realSize; i++) 
+    {
+        vector<Qrcode::Module> temp;
+
+        for (int j = 0; j < realSize; j++) 
+        {
+            Qrcode::Module tempModule;
+            tempModule.isFree = true;
+            tempModule.value = 0;
+
+            temp.push_back(tempModule);
+        }
+
+        result.push_back(temp);
+    }
+
+    return result;
+}
+
+void AddSearchElements(Qrcode::QrCode& matrix) 
+{
+    const vector<Bits> TOP_LEFT
+    {
+        {1,1,1,1,1,1,1,0},
+        {1,0,0,0,0,0,1,0},
+        {1,0,1,1,1,0,1,0},
+        {1,0,1,1,1,0,1,0},
+        {1,0,1,1,1,0,1,0},
+        {1,0,0,0,0,0,1,0},
+        {1,1,1,1,1,1,1,0},
+        {0,0,0,0,0,0,0,0}
+    };
+    const vector<Bits> BOTTOM_LEFT
+    {
+        {0,0,0,0,0,0,0,0},
+        {1,1,1,1,1,1,1,0},
+        {1,0,0,0,0,0,1,0},
+        {1,0,1,1,1,0,1,0},
+        {1,0,1,1,1,0,1,0},
+        {1,0,1,1,1,0,1,0},
+        {1,0,0,0,0,0,1,0},
+        {1,1,1,1,1,1,1,0}
+    };
+    const vector<Bits> TOP_RIGHT
+    {
+        {0,1,1,1,1,1,1,1},
+        {0,1,0,0,0,0,0,1},
+        {0,1,0,1,1,1,0,1},
+        {0,1,0,1,1,1,0,1},
+        {0,1,0,1,1,1,0,1},
+        {0,1,0,0,0,0,0,1},
+        {0,1,1,1,1,1,1,1},
+        {0,0,0,0,0,0,0,0}
+    };
+
+    for (int i = 0; i < TOP_LEFT.size(); i++) 
+    {
+        for (int j = 0; j < TOP_LEFT.size(); j++) 
+        {
+            matrix[BORDER_PADDING + i][BORDER_PADDING + j].value = TOP_LEFT[i][j];
+            matrix[BORDER_PADDING + i][BORDER_PADDING + j].isFree = false;
+        }
+    }
+
+    for (int i = 0; i < TOP_RIGHT.size(); i++)
+    {
+        for (int j = 0; j < TOP_RIGHT.size(); j++)
+        {
+            int currentPaddingX = matrix.size() - BORDER_PADDING - TOP_RIGHT.size();
+
+            matrix[BORDER_PADDING + i][currentPaddingX + j].value = TOP_RIGHT[i][j];
+            matrix[BORDER_PADDING + i][currentPaddingX + j].isFree = false;
+        }
+    }
+
+    for (int i = 0; i < BOTTOM_LEFT.size(); i++)
+    {
+        for (int j = 0; j < BOTTOM_LEFT.size(); j++)
+        {
+            int currentPaddingY = matrix.size() - BORDER_PADDING - BOTTOM_LEFT.size();
+
+            matrix[currentPaddingY + i][BORDER_PADDING + j].value = BOTTOM_LEFT[i][j];
+            matrix[currentPaddingY + i][BORDER_PADDING + j].isFree = false;
+        }
+    }
+}
+
+void AddAlignmentPatterns(Qrcode::QrCode& matrix, int version) 
+{
+    const vector<Bits> PATTERN
+    {
+        {1,1,1,1,1},
+        {1,0,0,0,1},
+        {1,0,1,0,1},
+        {1,0,0,0,1},
+        {1,1,1,1,1}
+    };
+
+    vector<vector<int>> coordinates = GetCoordinates(ALIGNMENT_PATTERNS.at(version));
+
+    for (auto pair : coordinates) 
+    {
+        int startX = BORDER_PADDING + pair[1] - 2;
+        int startY = BORDER_PADDING + pair[0] - 2;
+
+        for (int i = 0; i < PATTERN.size(); i++) 
+        {
+            for (int j = 0; j < PATTERN.size(); j++)
+            {
+                matrix[startY + i][startX + j].value = PATTERN[i][j];
+                matrix[startY + i][startX + j].isFree = false;
+            }
+        }
+    }
+}
+
+vector<vector<int>> GetCoordinates(vector<int> nodes) 
+{
+    vector<vector<int>> coordinates;
+
+    for (int i = 0; i < nodes.size(); i++) 
+    {
+        for (int j = 0; j < nodes.size(); j++) 
+        {
+            if (((j == (nodes.size() - 1) && i == 0) ||
+                (j == 0 && i == 0) ||
+                (j == 0 && i == (nodes.size() - 1))) && (nodes.size() > 1)) 
+            {
+                continue;
+            }
+
+            vector<int> pair = { nodes[j], nodes[i] };
+            coordinates.push_back(pair);
+        }
+    }
+
+    return coordinates;
+}
+
+void AddSynchronizationLines(Qrcode::QrCode& matrix) 
+{
+    const int START_COORD = 10;
+
+    int length = matrix.size() - BORDER_PADDING - 8 - START_COORD;
+
+    bool bitValue = true;
+
+    for (int i = 0; i < length; i++) 
+    {
+        matrix[START_COORD + i][START_COORD].value = bitValue;
+        matrix[START_COORD][START_COORD + i].value = bitValue;
+
+        matrix[START_COORD + i][START_COORD].isFree = false;
+        matrix[START_COORD][START_COORD + i].isFree = false;
+
+        bitValue = !bitValue;
+    }
+}
+
+void AddVersionCode(Qrcode::QrCode& matrix, int version) 
+{
+    const int WIDTH = 6;
+    const int HEIGHT = 3;
+
+    int startCoordY = matrix.size() - BORDER_PADDING - 11;
+    int startCoordX = 4;
+
+    Bits versionCode = VERSION_CODES.at(version);
+
+    for (int i = 0; i < HEIGHT; i++) 
+    {
+        for (int j = 0; j < WIDTH; j++) 
+        {
+            matrix[startCoordY + i][startCoordX + j].value = versionCode[i * WIDTH + j];
+            matrix[startCoordX + j][startCoordY + i].value = versionCode[i * WIDTH + j];
+
+            matrix[startCoordY + i][startCoordX + j].isFree = false;
+            matrix[startCoordX + j][startCoordY + i].isFree = false;
+        }
+    }
+}
+
+void AddMaskCode(Qrcode::QrCode& matrix) 
+{
+    int blStartCoordX = 12;
+    int blStartCoordY = matrix.size() - BORDER_PADDING - 1;
+    
+    int trStartCoordX = matrix.size() - BORDER_PADDING - 8;
+    int trStartCoordY = 12;
+
+    for (int i = 0; i < 8; i++) // add mask code from bottom-left to top-right
+    {
+        if (i == 7) 
+        {
+            matrix[blStartCoordY - i][blStartCoordX].value = 1;
+        }
+        else 
+        {
+            matrix[blStartCoordY - i][blStartCoordX].value = MASK_CODE[i];
+        }
+        
+        matrix[trStartCoordY][trStartCoordX + i].value = MASK_CODE[i + 7];
+
+        matrix[trStartCoordY][trStartCoordX + i].isFree = false;
+        matrix[blStartCoordY - i][blStartCoordX].isFree = false;
+    }
+
+    int tlCoordX = 4;
+    int tlCoordY = 12;
+
+    for (int i = 0; i < MASK_CODE.size(); i++) // add mask code on the top-left
+    {
+        matrix[tlCoordY][tlCoordX].value = MASK_CODE[i];
+        matrix[tlCoordY][tlCoordX].isFree = false;
+
+        if (i < 7) 
+        {
+            tlCoordX++;
+
+            if (!matrix[tlCoordY][tlCoordX].isFree)
+            {
+                tlCoordX++;
+            }
+        }
+        else 
+        {
+            tlCoordY--;
+
+            if (!matrix[tlCoordY][tlCoordX].isFree)
+            {
+                tlCoordY--;
+            }
+        }
+    }
 }
