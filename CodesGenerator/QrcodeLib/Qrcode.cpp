@@ -22,6 +22,7 @@ BlocksOfBytes GetCorrectionBlocks(BlocksOfBytes blocks, int version);
 Bytes PrepareArray(Bytes block, int correctionBytesAmount);
 unsigned char GetFirstByte(Bytes& bytes);
 Bytes Copy(Bytes source, int amount);
+Bytes UniteBlocks(BlocksOfBytes data, BlocksOfBytes correction);
 
 namespace Qrcode 
 {
@@ -45,6 +46,8 @@ namespace Qrcode
 
         BlocksOfBytes dataBlocks = GetDataBlocks(data, version);
         BlocksOfBytes correctionBlocks = GetCorrectionBlocks(dataBlocks, version);
+
+        Bytes sequence = UniteBlocks(dataBlocks, correctionBlocks);
 
         return 0;
     }
@@ -305,6 +308,37 @@ Bytes Copy(Bytes source, int amount)
     for (int i = 0; i < amount; i++) 
     {
         result.push_back(source[i]);
+    }
+
+    return result;
+}
+
+Bytes UniteBlocks(BlocksOfBytes data, BlocksOfBytes correction) 
+{
+    int dataBytesInBlock = data[data.size() - 1].size();
+    int correctionBytesInBlock = correction[0].size();
+
+    Bytes result;
+
+    for (int i = 0; i < dataBytesInBlock; i++) 
+    {
+        for (int j = 0; j < data.size(); j++) 
+        {
+            if (i > data[j].size() - 1) 
+            {
+                continue;
+            }
+
+            result.push_back(data[j][i]);
+        }
+    }
+
+    for (int i = 0; i < correctionBytesInBlock; i++) 
+    {
+        for (int j = 0; j < correction.size(); j++) 
+        {
+            result.push_back(correction[j][i]);
+        }
     }
 
     return result;
