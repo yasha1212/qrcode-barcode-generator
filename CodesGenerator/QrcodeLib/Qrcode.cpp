@@ -17,6 +17,7 @@ Bits EncodeString(string input);
 void AddServiceFields(Bits& data, int version, int charAmount);
 void FillSequence(Bits& data, int version);
 Bytes BitsToBytes(Bits data);
+Bits BytesToBits(Bytes data);
 BlocksOfBytes GetDataBlocks(Bits data, int version);
 BlocksOfBytes GetCorrectionBlocks(BlocksOfBytes blocks, int version);
 Bytes PrepareArray(Bytes block, int correctionBytesAmount);
@@ -30,7 +31,10 @@ void AddAlignmentPatterns(Qrcode::QrCode& matrix, int version);
 void AddSynchronizationLines(Qrcode::QrCode& matrix);
 void AddVersionCode(Qrcode::QrCode& matrix, int version);
 void AddMaskCode(Qrcode::QrCode& matrix);
+void AddData(Qrcode::QrCode& matrix, Bytes data);
+void MoveNext(int& x, int& y, Qrcode::QrCode matrix);
 vector<vector<int>> GetCoordinates(vector<int> nodes);
+bool OutOfDataSpace(int x, int y, Qrcode::QrCode matrix);
 
 namespace Qrcode 
 {
@@ -83,7 +87,7 @@ bool IsValidInput(string input)
 
 int ApplyMask(int x, int y) 
 {
-    return (x / 3 + y / 2) % 2;
+    return ((x - 4) + (y - 4)) % 3;
 }
 
 Bits EncodeString(string input) 
@@ -213,6 +217,23 @@ Bytes BitsToBytes(Bits data)
         }
 
         result.push_back(byte);
+    }
+
+    return result;
+}
+
+Bits BytesToBits(Bytes data) 
+{
+    Bits result;
+
+    for (int i = 0; i < data.size(); i++) 
+    {
+        for (int j = 7; j >= 0; j--) 
+        {
+            bool bit = data[i] & (1 << j);
+
+            result.push_back(bit);
+        }
     }
 
     return result;
@@ -374,6 +395,7 @@ Qrcode::QrCode BuildQrcode(Bytes data, int version)
     }
 
     AddMaskCode(matrix);
+    AddData(matrix, data);
 
     return matrix;
 }
@@ -630,4 +652,92 @@ void AddMaskCode(Qrcode::QrCode& matrix)
             }
         }
     }
+}
+
+void AddData(Qrcode::QrCode& matrix, Bytes data) 
+{
+    Bits dataSequence = BytesToBits(data);
+
+    int coordX = matrix.size() - BORDER_PADDING - 1;
+    int coordY = matrix.size() - BORDER_PADDING - 1;
+
+    int index = 0;
+
+    while (coordX >= BORDER_PADDING) 
+    {
+        bool dataBit = index < dataSequence.size() ? dataSequence[index] : 0;
+
+        matrix[coordY][coordX].value = ApplyMask(coordX, coordY) ? dataBit : !dataBit;
+        matrix[coordY][coordX].isFree = false;
+
+        MoveNext(coordX, coordY, matrix);
+        index++;
+    }
+}
+
+void MoveNext(int& x, int& y, Qrcode::QrCode matrix) 
+{
+    const int SYNCHRONIZATION_LINE = 10;
+
+    static int deltaY = 0;
+    static int deltaX = -1;
+    static bool isFromBottomToTop = true;
+
+    while (!matrix[y][x].isFree) 
+    {
+        if (x == 12 && (y == 4 || y == matrix.size() - BORDER_PADDING - 1)) 
+        {
+            int offset = y == 4 ? 9 : -8;
+            y += offset;
+            continue;
+        }
+
+        x += deltaX;
+        y += deltaY;
+
+        if (x == SYNCHRONIZATION_LINE) 
+        {
+            x += deltaX;
+            y += deltaY;
+        }
+
+        if (OutOfDataSpace(x, y, matrix)) 
+        {
+            x -= deltaX;
+            x -= 1;
+            y -= deltaY;
+            
+            deltaX = -1;
+            deltaY = 0;
+
+            isFromBottomToTop = !isFromBottomToTop;
+        }
+        else 
+        {
+            deltaX = -deltaX;
+            deltaY = deltaY == 0 ? -1 : 0;
+            deltaY *= isFromBottomToTop ? 1 : -1;
+        }
+    }
+}
+
+bool OutOfDataSpace(int x, int y, Qrcode::QrCode matrix) 
+{
+    int leftBorderX = 12;
+    int rightBorderX = matrix.size() - BORDER_PADDING - 8;
+    int topBorderY = 3;
+    int middleTopBorderY = 12;
+    int middleBottomBorderY = matrix.size() - BORDER_PADDING - 8;
+    int bottomBorderY = matrix.size() - BORDER_PADDING;
+
+    if ((x > leftBorderX && y >= bottomBorderY) ||
+        (x >= rightBorderX && y <= middleTopBorderY) ||
+        (x > leftBorderX && x < rightBorderX && y <= topBorderY) ||
+        (x <= leftBorderX && y <= middleTopBorderY) ||
+        (x <= leftBorderX && y >= middleBottomBorderY)) 
+    {
+        return true;
+    }
+
+    return false;
 }

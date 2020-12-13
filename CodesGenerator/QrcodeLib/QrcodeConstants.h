@@ -409,5 +409,5 @@ const std::unordered_map<int, std::vector<bool>> VERSION_CODES // Version, Code 
 
 const std::vector<bool> MASK_CODE
 {
-    1,0,0,0,1,0,1,1,1,1,1,1,0,0,1
+    1,0,1,1,0,1,1,0,1,0,0,1,0,1,1
 };
