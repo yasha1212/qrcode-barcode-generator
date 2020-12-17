@@ -19,6 +19,7 @@ static TCHAR szWindowClass[] = _T("GeneratorApp");
 static TCHAR szTitle[] = _T("Qrcode & Barcode Generator");
 
 bool isUPC = true;
+bool isBarcode;
 vector<bool> barcode;
 Qrcode::Qrcode qrcode;
 TCHAR barcodeInput[1024];
@@ -246,6 +247,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     Barcode::GenerateEAN13(WideStringToString(barcodeInput), barcode);
                 }
+
+                isBarcode = true;
+
+                InvalidateRect(hWnd, NULL, TRUE);
             }
             else 
             {
@@ -258,6 +263,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (IsValidInput(qrcodeInput)) 
             {
                 Qrcode::Generate(WideStringToBytes(qrcodeInput), qrcode);
+                
+                isBarcode = false;
+
+                InvalidateRect(hWnd, NULL, TRUE);
             }
             else 
             {
@@ -272,6 +281,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         hdc = BeginPaint(hWnd, &ps);
 
         DrawInterface(hdc);
+
+        if (isBarcode) 
+        {
+            if (!barcode.empty()) 
+            {
+                DrawBarcode(hdc, barcode, 3);
+            }
+        }
+        else 
+        {
+            if (!qrcode.empty())
+            {
+                DrawQrcode(hdc, qrcode, 4);
+            }
+        }
 
         EndPaint(hWnd, &ps);
         break;

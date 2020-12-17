@@ -20,6 +20,8 @@
 void AddMainMenu(HWND hWnd);
 void CenterWindow(HWND hWnd, int width, int height);
 void DrawInterface(HDC hdc);
+void DrawBarcode(HDC hdc, const std::vector<bool>& barcode, int scale);
+void DrawQrcode(HDC hdc, const std::vector<std::vector<bool>>& qrcode, int scale);
 bool IsValidInput(TCHAR *input, bool isUPC);
 bool IsValidInput(TCHAR *input);
 std::string WideStringToString(std::wstring wstr);

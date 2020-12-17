@@ -102,3 +102,55 @@ std::vector<unsigned char> WideStringToBytes(std::wstring wstr)
 
     return bytes;
 }
+
+void DrawBarcode(HDC hdc, const std::vector<bool>& barcode, int scale) 
+{
+    const int START_X = 350 - barcode.size() * scale / 2;
+    const int HEIGHT = 60;
+    const int START_Y = 175 - HEIGHT * scale / 2;
+
+    for (int i = 0; i < HEIGHT * scale; i++) 
+    {
+        for (int j = 0; j < barcode.size(); j++) 
+        {
+            for (int k = 0; k < scale; k++) 
+            {
+                if (barcode[j])
+                {
+                    SetPixel(hdc, START_X + j * scale + k, START_Y + i, RGB(0, 0, 0));
+                }
+                else 
+                {
+                    SetPixel(hdc, START_X + j * scale + k, START_Y + i, RGB(255, 255, 255));
+                }
+            }
+        }
+    }
+}
+
+void DrawQrcode(HDC hdc, const std::vector<std::vector<bool>>& qrcode, int scale) 
+{
+    const int START_X = 350 - qrcode.size() * scale / 2;
+    const int START_Y = 175 - qrcode.size() * scale / 2;
+
+    for (int i = 0; i < qrcode.size(); i++) 
+    {
+        for (int r = 0; r < scale; r++) 
+        {
+            for (int j = 0; j < qrcode.size(); j++) 
+            {
+                for (int k = 0; k < scale; k++) 
+                {
+                    if (qrcode[i][j]) 
+                    {
+                        SetPixel(hdc, START_X + j * scale + k, START_Y + i * scale + r, RGB(0, 0, 0));
+                    }
+                    else 
+                    {
+                        SetPixel(hdc, START_X + j * scale + k, START_Y + i * scale + r, RGB(255, 255, 255));
+                    }
+                }
+            }
+        }
+    }
+}
