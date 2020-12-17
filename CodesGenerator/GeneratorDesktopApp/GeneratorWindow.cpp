@@ -20,6 +20,8 @@ static TCHAR szTitle[] = _T("Qrcode & Barcode Generator");
 
 bool isUPC = true;
 bool isBarcode;
+bool isSavedBarcode = true;
+bool isSavedQrcode = true;
 vector<bool> barcode;
 Qrcode::Qrcode qrcode;
 TCHAR barcodeInput[1024];
@@ -192,17 +194,50 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         switch (LOWORD(wParam)) 
         {
         case IDM_SAVE:
-            if (!barcode.empty()) 
-            {
-                Barcode::WriteToBitmapFile(barcode, SCALE, "D:\\BARCODE_TEST.bmp");
-            }
-            if (!qrcode.empty()) 
-            {
-                Qrcode::WriteToBitmapFile(qrcode, SCALE, "D:\\QRCODE_TEST.bmp");
-            }
 
-            MessageBox(hWnd, _T("Files were successfully saved!"),
-                _T("Qrcode & Barcode Generator"), MB_ICONINFORMATION);
+            TCHAR fileName[256];
+            fileName[0] = '\0';
+
+            OPENFILENAME Ofn;
+
+            memset(&Ofn, 0, sizeof(OPENFILENAME));
+            Ofn.lStructSize = sizeof(OPENFILENAME);
+            Ofn.hwndOwner = hWnd;
+            Ofn.lpstrFilter = (LPCWSTR)L"Image Files (.bmp)\0*.bmp\0";
+            Ofn.nFilterIndex = 1;
+            Ofn.lpstrInitialDir = (LPCWSTR)L"c:\\";
+            Ofn.lpstrFile = fileName;
+            Ofn.nMaxFile = sizeof(fileName);
+            Ofn.lpstrDefExt = (LPCWSTR)L"bmp";
+
+            if (!barcode.empty() && !isSavedBarcode) 
+            {
+                Ofn.lpstrTitle = (LPCWSTR)L"Save Barcode as...";
+
+                if (GetSaveFileName(&Ofn)) 
+                {
+                    Barcode::WriteToBitmapFile(barcode, SCALE, WideStringToString(Ofn.lpstrFile));
+
+                    MessageBox(hWnd, _T("Barcode was successfully saved!"),
+                        _T("Qrcode & Barcode Generator"), MB_ICONINFORMATION);
+
+                    isSavedBarcode = true;
+                }
+            }
+            if (!qrcode.empty() && !isSavedQrcode) 
+            {
+                Ofn.lpstrTitle = (LPCWSTR)L"Save QR-code as...";
+
+                if (GetSaveFileName(&Ofn))
+                {
+                    Qrcode::WriteToBitmapFile(qrcode, SCALE, WideStringToString(Ofn.lpstrFile));
+
+                    MessageBox(hWnd, _T("QR-code was successfully saved!"),
+                        _T("Qrcode & Barcode Generator"), MB_ICONINFORMATION);
+
+                    isSavedQrcode = true;
+                }
+            }
 
             break;
 
@@ -249,6 +284,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
 
                 isBarcode = true;
+                isSavedBarcode = false;
 
                 InvalidateRect(hWnd, NULL, TRUE);
             }
@@ -265,6 +301,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 Qrcode::Generate(WideStringToBytes(qrcodeInput), qrcode);
                 
                 isBarcode = false;
+                isSavedQrcode = false;
 
                 InvalidateRect(hWnd, NULL, TRUE);
             }
