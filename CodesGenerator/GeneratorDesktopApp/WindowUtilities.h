@@ -1,6 +1,8 @@
 #pragma once
 
 #include <windows.h>
+#include <string>
+#include <vector>
 
 #define IDM_SAVE 11
 #define IDM_QUIT 12
@@ -16,6 +18,9 @@
 #define IDE_BARCODE 42
 
 void AddMainMenu(HWND hWnd);
-void AddControls(HWND hWnd, HINSTANCE hInst);
 void CenterWindow(HWND hWnd, int width, int height);
 void DrawInterface(HDC hdc);
+bool IsValidInput(TCHAR *input, bool isUPC);
+bool IsValidInput(TCHAR *input);
+std::string WideStringToString(std::wstring wstr);
+std::vector<unsigned char> WideStringToBytes(std::wstring wstr);

@@ -88,6 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\github\qrcode-barcode-generator\CodesGenerator\BarcodeLib;D:\github\qrcode-barcode-generator\CodesGenerator\BitmapLib;D:\github\qrcode-barcode-generator\CodesGenerator\QrcodeLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -102,6 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\github\qrcode-barcode-generator\CodesGenerator\BarcodeLib;D:\github\qrcode-barcode-generator\CodesGenerator\BitmapLib;D:\github\qrcode-barcode-generator\CodesGenerator\QrcodeLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -116,6 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\github\qrcode-barcode-generator\CodesGenerator\BarcodeLib;D:\github\qrcode-barcode-generator\CodesGenerator\BitmapLib;D:\github\qrcode-barcode-generator\CodesGenerator\QrcodeLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,6 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\github\qrcode-barcode-generator\CodesGenerator\BarcodeLib;D:\github\qrcode-barcode-generator\CodesGenerator\BitmapLib;D:\github\qrcode-barcode-generator\CodesGenerator\QrcodeLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -144,6 +148,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WindowUtilities.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BarcodeLib\BarcodeLib.vcxproj">
+      <Project>{c56ff7ac-b5be-49b1-833a-fafc8e86c818}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\BitmapLib\BitmapLib.vcxproj">
+      <Project>{7480ab5d-2191-40c6-8aed-145a7abc1854}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\QrcodeLib\QrcodeLib.vcxproj">
+      <Project>{d05c985b-4e44-48dd-b31e-286a4317768a}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
