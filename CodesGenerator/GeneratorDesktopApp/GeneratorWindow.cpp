@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tchar.h>
+#include "WindowUtilities.h"
 
 #define UNICODE
 #define _UNICODE
 
-#define WINDOW_HEIGHT 500
+#define WINDOW_HEIGHT 600
 #define WINDOW_WIDTH 700
 
 static TCHAR szWindowClass[] = _T("GeneratorApp");
@@ -15,14 +16,6 @@ static TCHAR szTitle[] = _T("Qrcode & Barcode Generator");
 HINSTANCE hInst;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-
-void CenterWindow(HWND hWnd)
-{
-    int x = (GetSystemMetrics(SM_CXSCREEN) - WINDOW_WIDTH) / 2;
-    int y = (GetSystemMetrics(SM_CYSCREEN) - WINDOW_HEIGHT) / 2;
-
-    SetWindowPos(hWnd, 0, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-}
 
 int CALLBACK WinMain(
     _In_ HINSTANCE hInstance,
@@ -61,7 +54,7 @@ int CALLBACK WinMain(
     HWND hWnd = CreateWindow(
         szWindowClass,
         szTitle,
-        WS_OVERLAPPEDWINDOW,
+        WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT,
         WINDOW_WIDTH, WINDOW_HEIGHT,
         NULL,
@@ -80,7 +73,10 @@ int CALLBACK WinMain(
         return 1;
     }
 
-    CenterWindow(hWnd);
+    CenterWindow(hWnd, WINDOW_WIDTH, WINDOW_HEIGHT);
+    AddMainMenu(hWnd);
+    AddControls(hWnd, hInst);
+
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
@@ -102,8 +98,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
+    case WM_COMMAND:
+        switch (LOWORD(wParam)) 
+        {
+        case IDM_QUIT:
+            DestroyWindow(hWnd);
+            break;
+
+        case IDM_PROGRAM:
+            MessageBox(hWnd, _T("This program can generate barcodes (UPC, EAN13) and qrcodes (<20 version of M-correction level)"),
+                _T("Qrcode & Barcode Generator"), MB_ICONINFORMATION);
+            break;
+
+        case IDM_AUTHOR:
+            MessageBox(hWnd, _T("Shukan Aleksey, 851005\nBSUIR, Minsk, 2020"),
+                _T("Qrcode & Barcode Generator"), MB_ICONINFORMATION);
+            break;
+        }
+        break;
+
     case WM_PAINT:
         hdc = BeginPaint(hWnd, &ps);
+
+        DrawInterface(hdc);
 
         EndPaint(hWnd, &ps);
         break;
