@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BitmapLib", "BitmapLib\Bitm
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QrcodeLib", "QrcodeLib\QrcodeLib.vcxproj", "{D05C985B-4E44-48DD-B31E-286A4317768A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GeneratorDesktopApp", "GeneratorDesktopApp\GeneratorDesktopApp.vcxproj", "{3B63BF75-F6A5-4474-87DF-B6921B5C40BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{D05C985B-4E44-48DD-B31E-286A4317768A}.Release|x64.Build.0 = Release|x64
 		{D05C985B-4E44-48DD-B31E-286A4317768A}.Release|x86.ActiveCfg = Release|Win32
 		{D05C985B-4E44-48DD-B31E-286A4317768A}.Release|x86.Build.0 = Release|Win32
+		{3B63BF75-F6A5-4474-87DF-B6921B5C40BE}.Debug|x64.ActiveCfg = Debug|x64
+		{3B63BF75-F6A5-4474-87DF-B6921B5C40BE}.Debug|x64.Build.0 = Debug|x64
+		{3B63BF75-F6A5-4474-87DF-B6921B5C40BE}.Debug|x86.ActiveCfg = Debug|Win32
+		{3B63BF75-F6A5-4474-87DF-B6921B5C40BE}.Debug|x86.Build.0 = Debug|Win32
+		{3B63BF75-F6A5-4474-87DF-B6921B5C40BE}.Release|x64.ActiveCfg = Release|x64
+		{3B63BF75-F6A5-4474-87DF-B6921B5C40BE}.Release|x64.Build.0 = Release|x64
+		{3B63BF75-F6A5-4474-87DF-B6921B5C40BE}.Release|x86.ActiveCfg = Release|Win32
+		{3B63BF75-F6A5-4474-87DF-B6921B5C40BE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
