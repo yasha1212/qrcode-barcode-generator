@@ -6,14 +6,20 @@
 
 using namespace std;
 
+struct Module
+{
+    bool value;
+    bool isFree;
+};
+
 typedef vector<bool> Bits;
 typedef vector<unsigned char> Bytes;
 typedef vector<vector<unsigned char>> BlocksOfBytes;
+typedef std::vector<std::vector<Module>> BuildMatrix;
 
 int ApplyMask(int x, int y);
 int GetVersion(int bitsAmount);
 bool IsValidInput(string input);
-Bits EncodeString(string input);
 void AddServiceFields(Bits& data, int version, int charAmount);
 void FillSequence(Bits& data, int version);
 Bytes BitsToBytes(Bits data);
@@ -24,28 +30,24 @@ Bytes PrepareArray(Bytes block, int correctionBytesAmount);
 unsigned char GetFirstByte(Bytes& bytes);
 Bytes Copy(Bytes source, int amount);
 Bytes UniteBlocks(BlocksOfBytes data, BlocksOfBytes correction);
-Qrcode::QrCode BuildQrcode(Bytes data, int version);
-Qrcode::QrCode Initialize(int version);
-void AddSearchElements(Qrcode::QrCode& matrix);
-void AddAlignmentPatterns(Qrcode::QrCode& matrix, int version);
-void AddSynchronizationLines(Qrcode::QrCode& matrix);
-void AddVersionCode(Qrcode::QrCode& matrix, int version);
-void AddMaskCode(Qrcode::QrCode& matrix);
-void AddData(Qrcode::QrCode& matrix, Bytes data);
-void MoveNext(int& x, int& y, Qrcode::QrCode matrix);
+Qrcode::Qrcode BuildQrcode(Bytes data, int version);
+BuildMatrix Initialize(int version);
+void AddSearchElements(BuildMatrix& matrix);
+void AddAlignmentPatterns(BuildMatrix& matrix, int version);
+void AddSynchronizationLines(BuildMatrix& matrix);
+void AddVersionCode(BuildMatrix& matrix, int version);
+void AddMaskCode(BuildMatrix& matrix);
+void AddData(BuildMatrix& matrix, Bytes data);
+void MoveNext(int& x, int& y, BuildMatrix matrix);
 vector<vector<int>> GetCoordinates(vector<int> nodes);
-bool OutOfDataSpace(int x, int y, Qrcode::QrCode matrix);
+bool OutOfDataSpace(int x, int y, BuildMatrix matrix);
+Qrcode::Qrcode GetQrcode(BuildMatrix matrix);
 
 namespace Qrcode 
 {
-    int Generate(string input, QrCode& qrcode) 
+    int Generate(Bytes input, Qrcode& qrcode) 
     {
-        if (!IsValidInput(input)) 
-        {
-            return 2;
-        }
-
-        Bits data = EncodeString(input);
+        Bits data = BytesToBits(input);
         int version = GetVersion(data.size());
 
         if (version == 0) 
@@ -53,7 +55,7 @@ namespace Qrcode
             return 1;
         }
 
-        AddServiceFields(data, version, input.length());
+        AddServiceFields(data, version, input.size());
         FillSequence(data, version);
 
         BlocksOfBytes dataBlocks = GetDataBlocks(data, version);
@@ -90,48 +92,6 @@ int ApplyMask(int x, int y)
     return ((x - 4) + (y - 4)) % 3;
 }
 
-Bits EncodeString(string input) 
-{
-    Bits result;
-
-    int sum = 0;
-
-    size_t stringEvenLength = input.length() % 2 == 0 ? input.length() : input.length() - 1;
-
-    for (int i = 0; i < stringEvenLength; i++) 
-    {
-        if (i % 2 == 0) 
-        {
-            sum += CHARACTERS_CODES.at(input[i]) * 45;
-        }
-        else 
-        {
-            sum += CHARACTERS_CODES.at(input[i]);
-
-            for (int j = 10; j >= 0; j--) // copy last 11 bits
-            {
-                bool bit = sum & (1 << j);
-                result.push_back(bit);
-            }
-
-            sum = 0;
-        }
-    }
-
-    if (input.length() > stringEvenLength) 
-    {
-        sum = CHARACTERS_CODES.at(input[stringEvenLength]);
-
-        for (int i = 5; i >= 0; i--) // copy last 6 bits
-        {
-            bool bit = sum & (1 << i);
-            result.push_back(bit);
-        }
-    }
-
-    return result;
-}
-
 int GetVersion(int bitsAmount) 
 {
     int version = 0;
@@ -157,7 +117,7 @@ void AddServiceFields(Bits& data, int version, int charAmount)
         result.push_back(bit);
     }
 
-    for (int i = VERSION_PARAMETERS.at(version)[DATA_FIELD_LENGTH] - 1; i >= 0; i--) // copy predefined for version amount of bits
+    for (int i = VERSION_PARAMETERS.at(version)[DATA_FIELD_LENGTH] - 1; i >= 0; i--)
     {
         bool bit = charAmount & (1 << i);
         result.push_back(bit);
@@ -377,9 +337,9 @@ Bytes UniteBlocks(BlocksOfBytes data, BlocksOfBytes correction)
     return result;
 }
 
-Qrcode::QrCode BuildQrcode(Bytes data, int version) 
+Qrcode::Qrcode BuildQrcode(Bytes data, int version)
 {
-    Qrcode::QrCode matrix = Initialize(version);
+    BuildMatrix matrix = Initialize(version);
     AddSearchElements(matrix);
 
     if (version > 1) 
@@ -397,10 +357,10 @@ Qrcode::QrCode BuildQrcode(Bytes data, int version)
     AddMaskCode(matrix);
     AddData(matrix, data);
 
-    return matrix;
+    return GetQrcode(matrix);
 }
 
-Qrcode::QrCode Initialize(int version) 
+BuildMatrix Initialize(int version)
 {
     int valueSize;
 
@@ -416,15 +376,15 @@ Qrcode::QrCode Initialize(int version)
 
     int realSize = valueSize + 8;
 
-    Qrcode::QrCode result;
+    BuildMatrix result;
 
     for (int i = 0; i < realSize; i++) 
     {
-        vector<Qrcode::Module> temp;
+        vector<Module> temp;
 
         for (int j = 0; j < realSize; j++) 
         {
-            Qrcode::Module tempModule;
+            Module tempModule;
             tempModule.isFree = true;
             tempModule.value = 0;
 
@@ -437,7 +397,7 @@ Qrcode::QrCode Initialize(int version)
     return result;
 }
 
-void AddSearchElements(Qrcode::QrCode& matrix) 
+void AddSearchElements(BuildMatrix& matrix)
 {
     const vector<Bits> TOP_LEFT
     {
@@ -505,7 +465,7 @@ void AddSearchElements(Qrcode::QrCode& matrix)
     }
 }
 
-void AddAlignmentPatterns(Qrcode::QrCode& matrix, int version) 
+void AddAlignmentPatterns(BuildMatrix& matrix, int version)
 {
     const vector<Bits> PATTERN
     {
@@ -557,7 +517,7 @@ vector<vector<int>> GetCoordinates(vector<int> nodes)
     return coordinates;
 }
 
-void AddSynchronizationLines(Qrcode::QrCode& matrix) 
+void AddSynchronizationLines(BuildMatrix& matrix)
 {
     const int START_COORD = 10;
 
@@ -577,7 +537,7 @@ void AddSynchronizationLines(Qrcode::QrCode& matrix)
     }
 }
 
-void AddVersionCode(Qrcode::QrCode& matrix, int version) 
+void AddVersionCode(BuildMatrix& matrix, int version)
 {
     const int WIDTH = 6;
     const int HEIGHT = 3;
@@ -600,7 +560,7 @@ void AddVersionCode(Qrcode::QrCode& matrix, int version)
     }
 }
 
-void AddMaskCode(Qrcode::QrCode& matrix) 
+void AddMaskCode(BuildMatrix& matrix)
 {
     int blStartCoordX = 12;
     int blStartCoordY = matrix.size() - BORDER_PADDING - 1;
@@ -608,7 +568,7 @@ void AddMaskCode(Qrcode::QrCode& matrix)
     int trStartCoordX = matrix.size() - BORDER_PADDING - 8;
     int trStartCoordY = 12;
 
-    for (int i = 0; i < 8; i++) // add mask code from bottom-left to top-right
+    for (int i = 0; i < 8; i++)
     {
         if (i == 7) 
         {
@@ -628,7 +588,7 @@ void AddMaskCode(Qrcode::QrCode& matrix)
     int tlCoordX = 4;
     int tlCoordY = 12;
 
-    for (int i = 0; i < MASK_CODE.size(); i++) // add mask code on the top-left
+    for (int i = 0; i < MASK_CODE.size(); i++)
     {
         matrix[tlCoordY][tlCoordX].value = MASK_CODE[i];
         matrix[tlCoordY][tlCoordX].isFree = false;
@@ -654,7 +614,7 @@ void AddMaskCode(Qrcode::QrCode& matrix)
     }
 }
 
-void AddData(Qrcode::QrCode& matrix, Bytes data) 
+void AddData(BuildMatrix& matrix, Bytes data)
 {
     Bits dataSequence = BytesToBits(data);
 
@@ -675,7 +635,7 @@ void AddData(Qrcode::QrCode& matrix, Bytes data)
     }
 }
 
-void MoveNext(int& x, int& y, Qrcode::QrCode matrix) 
+void MoveNext(int& x, int& y, BuildMatrix matrix)
 {
     const int SYNCHRONIZATION_LINE = 10;
 
@@ -721,7 +681,7 @@ void MoveNext(int& x, int& y, Qrcode::QrCode matrix)
     }
 }
 
-bool OutOfDataSpace(int x, int y, Qrcode::QrCode matrix) 
+bool OutOfDataSpace(int x, int y, BuildMatrix matrix)
 {
     int leftBorderX = 12;
     int rightBorderX = matrix.size() - BORDER_PADDING - 8;
@@ -740,4 +700,23 @@ bool OutOfDataSpace(int x, int y, Qrcode::QrCode matrix)
     }
 
     return false;
+}
+
+Qrcode::Qrcode GetQrcode(BuildMatrix matrix) 
+{
+    Qrcode::Qrcode result;
+
+    for (auto row : matrix)
+    {
+        vector<bool> matrixRow;
+
+        for (auto module : row)
+        {
+            matrixRow.push_back(module.value);
+        }
+
+        result.push_back(matrixRow);
+    }
+
+    return result;
 }
