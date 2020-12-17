@@ -69,6 +69,27 @@ namespace Qrcode
 
         return 0;
     }
+
+    void WriteToBitmapFile(const Qrcode& qrcode, int scale, string path) 
+    {
+        Bits data;
+
+        for (int i = qrcode.size() - 1; i >= 0; i--) 
+        {
+            for (int r = 0; r < scale; r++) 
+            {
+                for (int j = 0; j < qrcode.size(); j++) 
+                {
+                    for (int k = 0; k < scale; k++) 
+                    {
+                        data.push_back(qrcode[i][j]);
+                    }
+                }
+            }
+        }
+
+        Bitmap::CreateBitmapFile(data, qrcode.size() * scale, qrcode.size() * scale, path);
+    }
 }
 
 bool IsValidInput(string input) 

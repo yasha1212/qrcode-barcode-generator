@@ -5,5 +5,5 @@
 
 namespace Bitmap 
 {
-    void WriteBarcodeToFile(std::vector<bool> barcode, int scale, std::string path);
+    void CreateBitmapFile(std::vector<bool> data, int width, int height, std::string path);
 }

@@ -81,6 +81,27 @@ namespace Barcode
 
 		return 0;
 	}
+
+	void WriteToBitmapFile(const vector<bool>& barcode, int scale, string path) 
+	{
+		const int BARCODE_HEIGHT = 50;
+		const int BARCODE_WIDTH = 95;
+
+		vector<bool> data;
+
+		for (int i = BARCODE_HEIGHT * scale; i >= 0; i--) 
+		{
+			for (int j = 0; j < BARCODE_WIDTH; j++) 
+			{
+				for (int k = 0; k < scale; k++)
+				{
+					data.push_back(barcode[j]);
+				}
+			}
+		}
+
+		Bitmap::CreateBitmapFile(data, BARCODE_WIDTH * scale, BARCODE_HEIGHT * scale, path);
+	}
 }
 
 int CharToInt(char c)
